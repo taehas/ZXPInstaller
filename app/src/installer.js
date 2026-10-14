@@ -40,12 +40,18 @@ export class Installer {
       child.stderr.on('data', d => {
         output += d.toString()
       })
-      child.on('error', e => reject(e.message))
+      child.on('error', e => reject(e))
       child.on('exit', code => {
         const failed = code !== 0 || /\b(fail(ed)?|error)\b/i.test(output)
         if (!failed) return resolve()
+        // UPIA exits 0 even on failure and reports e.g. "Failed to install, status = -410!"
+        const status = /status = -?(\d+)/.exec(output)?.[1]
         const line = output.split('\n').map(l => l.trim()).filter(Boolean).pop()
-        reject(line || `Installer exited with code ${code}`)
+        const known = status ? getErrorMessage(parseInt(status)) : null
+        if (known) return reject(new Error(known))
+        if (status) return reject(new Error(`Adobe's installer failed with error ${status}. ${line}`))
+        const fallback = `Installer exited with code ${code}`
+        reject(new Error(line ?? fallback))
       })
     })
   }
