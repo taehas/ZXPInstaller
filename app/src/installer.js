@@ -1,5 +1,5 @@
 import { getErrorMessage } from './messages.js'
-const { spawn } = require('child_process')
+const { spawn, execFileSync } = require('child_process')
 const path = require('path')
 
 const CMD_PREFIX = process.platform === 'darwin' ? '--' : '/'
@@ -21,6 +21,23 @@ function getExManCmdPath () {
   } else {
     return 'bin/mac/Contents/MacOS/ExManCmd'
   }
+}
+
+// For a -410 ("no CSXS/manifest.xml"), look inside the archive and say what it really is.
+export function diagnoseArchive (file) {
+  let names
+  try {
+    names = execFileSync('tar', ['-tf', file], { stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').filter(Boolean)
+  } catch {
+    return 'It is not a readable zip archive.'
+  }
+  const nested = names.filter(n => /\.(zxp|ccx|pkg|dmg|exe|msi)$/i.test(n)).slice(0, 3)
+  if (nested.length) return `It is a wrapper that contains other installers (${nested.join(', ')}). Extract it and install the inner file instead.`
+  if (names.some(n => /(^|\/)manifest\.json$/i.test(n))) return 'It looks like a UXP plugin package (manifest.json). Rename or install it as a .ccx instead.'
+  if (names.some(n => /(^|\/)CSXS\/manifest\.xml$/i.test(n)) === false && names.some(n => /(^|\/)[^/]+\/CSXS\/manifest\.xml$/i.test(n))) {
+    return 'The extension is nested inside an extra folder. The CSXS folder must be at the top level of the archive; re-zip it from inside that folder.'
+  }
+  return `No CSXS/manifest.xml found. Top-level contents: ${[...new Set(names.map(n => n.split('/')[0]))].slice(0, 5).join(', ')}.`
 }
 
 export class Installer {
@@ -48,7 +65,7 @@ export class Installer {
         const status = /status = -?(\d+)/.exec(output)?.[1]
         const line = output.split('\n').map(l => l.trim()).filter(Boolean).pop()
         const known = status ? getErrorMessage(parseInt(status)) : null
-        if (known) return reject(new Error(known))
+        if (known) return reject(new Error(status === '410' ? `${known} ${diagnoseArchive(extPath)}` : known))
         if (status) return reject(new Error(`Adobe's installer failed with error ${status}. ${line}`))
         const fallback = `Installer exited with code ${code}`
         reject(new Error(line ?? fallback))
