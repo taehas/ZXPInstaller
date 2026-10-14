@@ -1,6 +1,6 @@
-import { app, BrowserWindow } from 'electron'
-import * as path from 'path'
-import * as remote from '@electron/remote/main'
+const { app, BrowserWindow } = require('electron')
+const path = require('path')
+const remote = require('@electron/remote/main')
 
 remote.initialize()
 

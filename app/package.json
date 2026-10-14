@@ -1,9 +1,7 @@
 {
     "name": "ZXPInstaller",
     "version": "1.8.2",
-    "module": "main.js",
     "dependencies": {
-        "@electron/remote": "^2.0.1",
-        "esm": "^3.2.25"
+        "@electron/remote": "^2.1.3"
     }
 }
