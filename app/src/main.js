@@ -1,5 +1,6 @@
 import { Installer } from './installer.js'
 import { UIMessages } from './messages.js'
+import { Manager } from './manager.js'
 const { dialog, shell } = require('@electron/remote')
 
 class View {
@@ -37,6 +38,7 @@ class View {
     document.addEventListener('drop', e => {
       this.resetClasses()
       e.preventDefault()
+      window.manager.showTab('install')
       const file = e.dataTransfer.files[0]
       console.log('detected:', file.path)
       this.zxpPath = file.path
@@ -105,3 +107,4 @@ class View {
 }
 
 window.view = new View(document.body)
+window.manager = new Manager()

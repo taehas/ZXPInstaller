@@ -12,10 +12,10 @@ app.on('window-all-closed', () => app.quit())
 app.whenReady().then(() => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 600,
-    height: 550,
-    resizable: false,
-    maximizable: false,
+    width: 820,
+    height: 680,
+    minWidth: 700,
+    minHeight: 560,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       nodeIntegration: true,
