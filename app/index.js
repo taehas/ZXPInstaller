@@ -1,1 +1,1 @@
-require('esm')(module)('./main.js')
+require('./main.js')

@@ -5,9 +5,9 @@
   "main": "index.js",
   "priave": true,
   "dependencies": {
-    "electron": "^15.3.1",
-    "electron-builder": "^22.13.1",
-    "electron-packager": "^15.4.0"
+    "electron": "^44.7.2",
+    "electron-builder": "^26.15.3",
+    "electron-packager": "^17.1.2"
   },
   "scripts": {
     "dev": "./node_modules/.bin/electron ./app",
@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/elements-storage/ZXPInstaller#readme",
   "devDependencies": {
-    "eslint": "^8.2.0",
+    "eslint": "^8.57.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
