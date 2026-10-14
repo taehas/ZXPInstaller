@@ -85,7 +85,7 @@ class View {
 
   installationFailed (err) {
     this.toggleSpinner(false)
-    this.updateStatus(err)
+    this.updateStatus(err?.message ?? err)
   }
 
   installationSuccess () {
