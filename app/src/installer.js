@@ -3,6 +3,17 @@ const { spawn } = require('child_process')
 const path = require('path')
 
 const CMD_PREFIX = process.platform === 'darwin' ? '--' : '/'
+const fs = require('fs')
+
+// Adobe's Unified Plugin Installer Agent ships with Creative Cloud, is a native
+// arm64/x64 build, and installs both .zxp and .ccx. Prefer it over the bundled
+// (Intel-only, 2021-era) ExManCmd.
+function getUpiaPath () {
+  const candidates = process.platform === 'win32'
+    ? [path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Common Files', 'Adobe', 'Adobe Desktop Common', 'RemoteComponents', 'UPI', 'UnifiedPluginInstallerAgent', 'UnifiedPluginInstallerAgent.exe')]
+    : ['/Library/Application Support/Adobe/Adobe Desktop Common/RemoteComponents/UPI/UnifiedPluginInstallerAgent/UnifiedPluginInstallerAgent.app/Contents/MacOS/UnifiedPluginInstallerAgent']
+  return candidates.find(p => fs.existsSync(p)) ?? null
+}
 
 function getExManCmdPath () {
   if (process.platform === 'win32') {
@@ -14,6 +25,32 @@ function getExManCmdPath () {
 
 export class Installer {
   install (zxpPath) {
+    const upia = getUpiaPath()
+    return upia ? this.installWithUpia(upia, zxpPath) : this.installWithExMan(zxpPath)
+  }
+
+  installWithUpia (upia, extPath) {
+    console.log('installing with UPIA: ' + extPath)
+    return new Promise((resolve, reject) => {
+      let output = ''
+      const child = spawn(upia, ['--install', extPath])
+      child.stdout.on('data', d => {
+        output += d.toString()
+      })
+      child.stderr.on('data', d => {
+        output += d.toString()
+      })
+      child.on('error', e => reject(e.message))
+      child.on('exit', code => {
+        const failed = code !== 0 || /\b(fail(ed)?|error)\b/i.test(output)
+        if (!failed) return resolve()
+        const line = output.split('\n').map(l => l.trim()).filter(Boolean).pop()
+        reject(line || `Installer exited with code ${code}`)
+      })
+    })
+  }
+
+  installWithExMan (zxpPath) {
     console.log('using target path of ' + getExManCmdPath())
     console.log('starting to install ZXP from path ' + zxpPath)
 

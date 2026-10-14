@@ -2,11 +2,17 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>ZXP Installer</title>
+        <title>ZXP Manager</title>
         <script type="module" src="src/main.js"></script>
         <link rel="stylesheet" type="text/css" href="style.css">
+        <link rel="stylesheet" type="text/css" href="manager.css">
     </head>
     <body>
+      <nav class="tabs">
+        <button class="tab is-active" data-tab="install">Install</button>
+        <button class="tab" data-tab="manage">Extensions</button>
+      </nav>
+      <section id="install-view">
       <div class="main-view">
         <div class="holder">
           <div class="icon">
@@ -85,6 +91,20 @@
           <div class="status"></div>
         </div>
       </div>
+      </section>
+      <section id="manage-view" hidden>
+        <div class="insights"></div>
+        <div class="toolbar">
+          <input type="search" class="search" placeholder="Filter extensions">
+          <div class="filters">
+            <button class="chip is-active" data-filter="all">All</button>
+            <button class="chip" data-filter="issues">Needs attention</button>
+            <button class="chip" data-filter="disabled">Disabled</button>
+          </div>
+          <button class="chip rescan">Rescan</button>
+        </div>
+        <div class="ext-list"></div>
+      </section>
       <footer>
         <div>Maintained with ❤️ at</div>
         <a href="https://elements.tv" target="_blank">
