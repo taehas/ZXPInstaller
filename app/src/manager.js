@@ -1,4 +1,5 @@
-import { scanExtensions, detectApps, analyze, summarize, debugModeState, HOST_NAMES, MAX_CEP_RUNTIME } from './scanner.js'
+import { scanExtensions, detectApps, analyze, summarize, debugModeState, setDebugMode, normalizeName, HOST_NAMES, MAX_CEP_RUNTIME } from './scanner.js'
+import { listUpia, removeUpia } from './upia.js'
 import { disableExtension, enableExtension, removeExtension } from './actions.js'
 const { dialog, shell } = require('@electron/remote')
 
@@ -41,13 +42,28 @@ export class Manager {
   refresh () {
     this.list.innerHTML = '<div class="empty">Scanning…</div>'
     // Let the "Scanning…" paint before the synchronous scan.
-    setTimeout(() => {
+    setTimeout(async () => {
       this.apps = detectApps()
       this.extensions = analyze(scanExtensions(), this.apps)
       this.debug = debugModeState()
+      this.others = this.unmatched(await listUpia())
       this.loaded = true
       this.render()
     }, 30)
+  }
+
+  // Plugins Adobe's installer reports that aren't CEP folders we scanned (mostly UXP),
+  // merged across the apps they're installed in.
+  unmatched (entries) {
+    const known = new Set(this.extensions.flatMap(e => [e.name, e.folder, e.bundleId].filter(Boolean).map(normalizeName)))
+    const merged = new Map()
+    for (const e of entries) {
+      if (known.has(normalizeName(e.name))) continue
+      const key = `${e.name}\0${e.version}`
+      if (!merged.has(key)) merged.set(key, { name: e.name, version: e.version, products: [], status: e.status })
+      merged.get(key).products.push(e.product)
+    }
+    return [...merged.values()]
   }
 
   visible () {
@@ -69,10 +85,11 @@ export class Manager {
       cards.push(`<div class="insight warn"><div class="grow"><strong>${s.cleanup.length}</strong> safe cleanup suggestion${s.cleanup.length > 1 ? 's' : ''} (${fmtSize(s.cleanupBytes)}): outdated versions or extensions that target no installed app. Removed items go to the Trash.</div><button class="act" data-do="review">Review &amp; clean up</button></div>`)
     }
     const dbg = (this.debug || []).filter(d => d.on).map(d => d.version)
+    const unsigned = this.extensions.filter(e => !e.signed && !e.adobeManaged && !e.error).length
     if (dbg.length) {
-      cards.push(`<div class="insight"><div class="grow">CEP debug mode is on for CSXS ${dbg.join(', ')}. Unsigned extensions will load; turn it off if you don't need that.</div></div>`)
-    } else if (this.extensions.some(e => !e.signed && !e.adobeManaged && !e.error)) {
-      cards.push(`<div class="insight"><div class="grow">Some extensions are unsigned and need CEP debug mode (CSXS 9–${MAX_CEP_RUNTIME}) to load, which is currently off.</div></div>`)
+      cards.push(`<div class="insight"><div class="grow">CEP debug mode is on for CSXS ${dbg.join(', ')}. Unsigned extensions load, and so could anything else dropped into the extensions folder. Turn it off if you don't need it${unsigned ? ` (${unsigned} installed extension${unsigned > 1 ? 's are' : ' is'} unsigned and would stop loading)` : ''}.</div><button class="act" data-do="debug-off">Turn off</button></div>`)
+    } else if (unsigned) {
+      cards.push(`<div class="insight"><div class="grow">${unsigned} installed extension${unsigned > 1 ? 's are' : ' is'} unsigned and need CEP debug mode (CSXS 9–${MAX_CEP_RUNTIME}) to load. It is currently off.</div><button class="act" data-do="debug-on">Turn on</button></div>`)
     }
     this.insights.innerHTML = cards.join('')
 
@@ -81,7 +98,19 @@ export class Manager {
       this.list.innerHTML = '<div class="empty">No extensions match.</div>'
       return
     }
-    this.list.innerHTML = rows.map(e => this.row(e)).join('')
+    this.list.innerHTML = rows.map(e => this.row(e)).join('') + this.othersHtml()
+  }
+
+  othersHtml () {
+    const others = this.filter === 'all' ? (this.others || []).filter(o => !this.query || o.name.toLowerCase().includes(this.query)) : []
+    if (!others.length) return ''
+    return '<div class="section-title">Other plugins seen by Adobe\'s installer (UXP and others)</div>' + others.map((o, i) => `<div class="ext" data-o="${i}">
+      <div class="ext-main">
+        <div class="ext-name">${esc(o.name)}</div>
+        <div class="ext-meta"><span>v${esc(o.version)}</span><span class="badge">${esc(o.status.toLowerCase())}</span><span>${esc([...new Set(o.products)].join(', '))}</span></div>
+      </div>
+      <div class="ext-actions"><button class="act danger" data-do="remove-other">Remove</button></div>
+    </div>`).join('')
   }
 
   row (e) {
@@ -111,8 +140,9 @@ export class Manager {
   async onListClick (ev) {
     const btn = ev.target.closest('[data-do]')
     if (!btn) return
-    const ext = this.extensions[parseInt(btn.closest('.ext').dataset.i, 10)]
     const act = btn.dataset.do
+    if (act === 'remove-other') return this.removeOther(this.others[parseInt(btn.closest('.ext').dataset.o, 10)])
+    const ext = this.extensions[parseInt(btn.closest('.ext').dataset.i, 10)]
     try {
       if (act === 'reveal') return shell.showItemInFolder(ext.dir)
       if (act === 'remove' && !(await this.confirm(`Move “${ext.name}” ${ext.version || ''} to the Trash?`, ext.dir))) return
@@ -125,7 +155,45 @@ export class Manager {
     }
   }
 
+  async removeOther (o) {
+    const { response } = await dialog.showMessageBox({
+      type: 'warning',
+      buttons: ['Remove', 'Cancel'],
+      defaultId: 1,
+      cancelId: 1,
+      message: `Remove “${o.name}”?`,
+      detail: `Uses Adobe's installer to uninstall it from ${[...new Set(o.products)].join(', ')}. This cannot be undone from here.`,
+    })
+    if (response !== 0) return
+    try {
+      await removeUpia(o.name)
+      this.refresh()
+    } catch (err) {
+      dialog.showErrorBox('Removal failed', err.message)
+    }
+  }
+
   async onInsightClick (ev) {
+    const dbgBtn = ev.target.closest('[data-do^="debug-"]')
+    if (dbgBtn) {
+      const on = dbgBtn.dataset.do === 'debug-on'
+      const { response } = await dialog.showMessageBox({
+        type: 'question',
+        buttons: [on ? 'Turn on' : 'Turn off', 'Cancel'],
+        defaultId: 1,
+        cancelId: 1,
+        message: `Turn CEP debug mode ${on ? 'on' : 'off'}?`,
+        detail: `Changes the PlayerDebugMode setting for CSXS 9–${MAX_CEP_RUNTIME}. Restart your Adobe apps afterwards.`,
+      })
+      if (response !== 0) return
+      try {
+        setDebugMode(on)
+        this.refresh()
+      } catch (err) {
+        dialog.showErrorBox('Could not change setting', err.message)
+      }
+      return
+    }
     if (!ev.target.closest('[data-do="review"]')) return
     const { cleanup } = summarize(this.extensions)
     const detail = cleanup.map(e => `• ${e.name} ${e.version || ''} (${e.scope}) – ${e.suggestRemove}`).join('\n')

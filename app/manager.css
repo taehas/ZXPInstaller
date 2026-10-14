@@ -23,7 +23,7 @@
 .tab:hover, .chip:hover, .act:hover { border-color: #c23344; }
 
 #install-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-#install-view .main-view { margin: auto 100px; }
+#install-view { align-items: center; }
 
 #manage-view {
   flex: 1;
@@ -76,3 +76,4 @@ body.manage footer { display: none; }
 .act { padding: 3px 10px; border-radius: 4px; font-size: 11px; }
 .act.danger:hover { background: #c23344; color: #fff; }
 .empty { padding: 30px; text-align: center; color: #b99; }
+.section-title { padding: 10px 12px 6px; color: #b99; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-top: 1px solid #751f29; background: #3a1016; }
