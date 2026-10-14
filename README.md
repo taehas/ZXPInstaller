@@ -42,4 +42,4 @@ The **Extensions** tab scans your user and system CEP extension folders and Adob
 
 Extensions can be disabled/enabled (moved to a sibling `extensions.disabled` folder, fully reversible), revealed, or removed. Adobe-managed extensions are protected. System-level changes prompt for an admin password on macOS.
 
-Installs prefer Adobe's Unified Plugin Installer Agent (installed with Creative Cloud, handles `.zxp` and `.ccx`) and fall back to the bundled ExManCmd. UXP plugins are not scanned yet.
+Installs prefer Adobe's Unified Plugin Installer Agent (installed with Creative Cloud, handles `.zxp` and `.ccx`) and fall back to the bundled ExManCmd. Plugins that only Adobe's installer knows about (mostly UXP) are listed in a separate section and can be removed through it. A button toggles CEP debug mode.

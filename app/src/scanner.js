@@ -341,3 +341,13 @@ export function summarize (extensions) {
     totalBytes: extensions.reduce((s, e) => s + e.size, 0),
   }
 }
+
+export function setDebugMode (on) {
+  for (let v = 9; v <= MAX_CEP_RUNTIME; v++) {
+    if (isMac) {
+      execFileSync('defaults', ['write', `com.adobe.CSXS.${v}`, 'PlayerDebugMode', '-string', on ? '1' : '0'])
+    } else if (isWin) {
+      execFileSync('reg', ['add', `HKCU\\Software\\Adobe\\CSXS.${v}`, '/v', 'PlayerDebugMode', '/t', 'REG_SZ', '/d', on ? '1' : '0', '/f'])
+    }
+  }
+}

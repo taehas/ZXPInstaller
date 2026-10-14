@@ -20,7 +20,8 @@ body {
   background-color: #471319;
   border-radius: 5px;
   border: 1px solid #751f29;
-  margin: auto 100px;
+  margin: auto;
+  width: min(460px, calc(100% - 80px));
   padding: 25px;
   transition: border-color .5s;
   cursor: pointer;
@@ -159,8 +160,7 @@ footer {
   background: #121922;
   box-shadow: 0 5px 6px 0px #0000002e inset;
   border-top: 1px solid #780000;
-  width: 200vw;
-  margin-left: -50vw;
+  width: 100%;
 }
 
 footer img {

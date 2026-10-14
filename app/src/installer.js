@@ -8,7 +8,7 @@ const fs = require('fs')
 // Adobe's Unified Plugin Installer Agent ships with Creative Cloud, is a native
 // arm64/x64 build, and installs both .zxp and .ccx. Prefer it over the bundled
 // (Intel-only, 2021-era) ExManCmd.
-function getUpiaPath () {
+export function getUpiaPath () {
   const candidates = process.platform === 'win32'
     ? [path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Common Files', 'Adobe', 'Adobe Desktop Common', 'RemoteComponents', 'UPI', 'UnifiedPluginInstallerAgent', 'UnifiedPluginInstallerAgent.exe')]
     : ['/Library/Application Support/Adobe/Adobe Desktop Common/RemoteComponents/UPI/UnifiedPluginInstallerAgent/UnifiedPluginInstallerAgent.app/Contents/MacOS/UnifiedPluginInstallerAgent']
