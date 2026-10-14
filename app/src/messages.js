@@ -34,6 +34,9 @@ const errorMessages = [
     codes: [407, 408],
     message: 'Installation failed because this extension requires another extension.',
   }, {
+    codes: [410],
+    message: 'This file is not a CEP extension: it has no CSXS/manifest.xml inside.',
+  }, {
     codes: [412],
     message: 'Installation failed because an extension of the same name exists.',
   }, {
