@@ -41,7 +41,7 @@ const errorMessages = [
     message: 'Installation failed because an extension of the same name exists.',
   }, {
     codes: [418],
-    message: 'Installation failed because a newer version of the extension is installed.',
+    message: 'Installation failed because Adobe\'s installer still has a newer version registered. If you already removed it, open the Extensions tab and remove it from the "Registered with Adobe\'s installer" list, then retry.',
   }, {
     codes: [456],
     message: 'Please close all Adobe applications before installing extensions.',

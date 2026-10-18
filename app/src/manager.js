@@ -47,7 +47,8 @@ export class Manager {
       this.apps = detectApps()
       this.extensions = analyze(scanExtensions(), this.apps)
       this.debug = debugModeState()
-      this.others = this.unmatched(await listUpia())
+      this.upiaEntries = await listUpia()
+      this.others = this.unmatched(this.upiaEntries)
       this.loaded = true
       this.render()
     }, 30)
@@ -162,7 +163,7 @@ export class Manager {
       defaultId: 1,
       cancelId: 1,
       message: `Remove “${o.name}”?`,
-      detail: `Uses Adobe's installer to uninstall it from ${[...new Set(o.products)].join(', ')}. This cannot be undone from here.`,
+      detail: `Clears it from Adobe's installer registry and uninstalls it from ${[...new Set(o.products)].join(', ')}. This cannot be undone from here.`,
     })
     if (response !== 0) return
     try {
@@ -214,8 +215,25 @@ export class Manager {
         failures.push(`${e.name}: ${err.message}`)
       }
     }
+    if (response === 0) await this.deregister(cleanup, failures)
     if (failures.length) dialog.showErrorBox('Some items failed', failures.join('\n'))
     this.refresh()
+  }
+
+  // Adobe's installer keeps its own registry. Without clearing it, reinstalling an older or
+  // equal version fails with "newer version already installed" (418) after the files are gone.
+  async deregister (removed, failures) {
+    const gone = new Set(removed.map(x => x.dir))
+    const names = new Set(removed.map(x => x.name))
+    for (const name of names) {
+      if (this.extensions.some(x => x.name === name && !gone.has(x.dir))) continue
+      if (!(this.upiaEntries || []).some(u => normalizeName(u.name) === normalizeName(name))) continue
+      try {
+        await removeUpia(name)
+      } catch (err) {
+        failures.push(`Adobe installer registration for ${name}: ${err.message}`)
+      }
+    }
   }
 
   deepUninstall (ext) {
@@ -243,6 +261,8 @@ export class Manager {
           failures.push(`${it.path}: ${err.message}`)
         }
       }
+      const removedDirs = new Set(items.filter(i => i.checked).map(i => i.path))
+      await this.deregister(this.extensions.filter(x => removedDirs.has(x.dir) || x === ext), failures)
       dlg.close()
       if (failures.length) dialog.showErrorBox('Some items could not be removed', failures.join('\n'))
       this.refresh()
