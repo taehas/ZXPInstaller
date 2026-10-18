@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, nativeTheme } = require('electron')
 const path = require('path')
 const remote = require('@electron/remote/main')
 
@@ -47,6 +47,8 @@ app.whenReady().then(() => {
     height: 680,
     minWidth: 700,
     minHeight: 560,
+    title: 'ZXP Manager',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0f1115' : '#f5f6f8',
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       nodeIntegration: true,

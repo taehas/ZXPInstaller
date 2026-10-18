@@ -2,10 +2,15 @@ import { scanExtensions, detectApps, analyze, summarize, debugModeState, setDebu
 import { listUpia, removeUpia } from './upia.js'
 import { disableExtension, enableExtension, trashPath } from './actions.js'
 import { findLeftovers } from './leftovers.js'
+import { demoData } from './demo.js'
 const { dialog, shell } = require('@electron/remote')
 
 const fmtSize = b => (b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB')
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+
+const AVATAR_COLORS = ['#5b4bf0', '#0e8f6e', '#c2410c', '#0369a1', '#a21caf', '#b45309', '#be123c', '#4d7c0f']
+const avatarColor = name => AVATAR_COLORS[[...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % AVATAR_COLORS.length]
+const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`
 
 export class Manager {
   constructor () {
@@ -14,42 +19,48 @@ export class Manager {
     this.filter = 'all'
     this.query = ''
     this.loaded = false
-    this.root = document.querySelector('#manage-view')
-    this.list = this.root.querySelector('.ext-list')
-    this.insights = this.root.querySelector('.insights')
+    this.list = document.querySelector('#ext-list')
+    this.banners = document.querySelector('#banners')
+    this.stats = document.querySelector('#stats')
 
-    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => this.showTab(t.dataset.tab)))
-    this.root.querySelectorAll('.chip[data-filter]').forEach(c => c.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(t => t.addEventListener('click', () => this.showTab(t.dataset.tab)))
+    document.querySelectorAll('#filters button').forEach(c => c.addEventListener('click', () => {
       this.filter = c.dataset.filter
-      this.root.querySelectorAll('.chip[data-filter]').forEach(x => x.classList.toggle('is-active', x === c))
+      document.querySelectorAll('#filters button').forEach(x => x.classList.toggle('is-active', x === c))
       this.render()
     }))
-    this.root.querySelector('.search').addEventListener('input', e => {
-      this.query = e.target.value.toLowerCase(); this.render()
+    document.querySelector('#search').addEventListener('input', e => {
+      this.query = e.target.value.toLowerCase()
+      this.render()
     })
-    this.root.querySelector('.rescan').addEventListener('click', () => this.refresh())
+    document.querySelector('#rescan').addEventListener('click', () => this.refresh())
     this.list.addEventListener('click', e => this.onListClick(e))
-    this.insights.addEventListener('click', e => this.onInsightClick(e))
+    this.banners.addEventListener('click', e => this.onInsightClick(e))
+    // Populate the sidebar and attention badge right away.
+    setTimeout(() => this.refresh(), 200)
   }
 
   showTab (name) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.tab === name))
-    document.querySelector('#install-view').hidden = name !== 'install'
-    this.root.hidden = name !== 'manage'
-    document.body.classList.toggle('manage', name === 'manage')
+    document.body.dataset.tab = name
+    document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('is-active', t.dataset.tab === name))
+    for (const v of ['install', 'manage', 'about']) document.querySelector(`#view-${v}`).hidden = v !== name
     if (name === 'manage' && !this.loaded) this.refresh()
   }
 
   refresh () {
-    this.list.innerHTML = '<div class="empty">Scanning…</div>'
+    if (this.scanning) return
+    this.scanning = true
+    if (!this.loaded) this.list.innerHTML = '<div class="empty">Scanning…</div>'
     // Let the "Scanning…" paint before the synchronous scan.
     setTimeout(async () => {
-      this.apps = detectApps()
-      this.extensions = analyze(scanExtensions(), this.apps)
-      this.debug = debugModeState()
-      this.upiaEntries = await listUpia()
+      const demo = process.env.ZXP_DEMO ? demoData() : null
+      this.apps = demo ? demo.apps : detectApps()
+      this.extensions = analyze(demo ? demo.extensions : scanExtensions(), this.apps)
+      this.debug = demo ? demo.debug : debugModeState()
+      this.upiaEntries = demo ? demo.upia : await listUpia()
       this.others = this.unmatched(this.upiaEntries)
       this.loaded = true
+      this.scanning = false
       this.render()
     }, 30)
   }
@@ -81,37 +92,53 @@ export class Manager {
 
   render () {
     const s = summarize(this.extensions)
+    this.renderSidebar(s)
+    this.stats.innerHTML = [
+      ['', s.total, 'Installed'],
+      [s.withIssues ? 'warn' : '', s.withIssues, 'Need attention'],
+      ['', s.disabled, 'Disabled'],
+      ['', fmtSize(s.totalBytes), 'On disk'],
+    ].map(([cls, n, label]) => `<div class="stat ${cls}"><b>${n}</b><span>${label}</span></div>`).join('')
+
     const cards = []
-    cards.push(`<div class="insight"><div class="grow"><strong>${s.total}</strong> extensions (${fmtSize(s.totalBytes)}) across <strong>${this.apps.length}</strong> detected Adobe apps · <strong>${s.withIssues}</strong> need attention · <strong>${s.disabled}</strong> disabled</div></div>`)
     if (s.cleanup.length) {
-      cards.push(`<div class="insight warn"><div class="grow"><strong>${s.cleanup.length}</strong> safe cleanup suggestion${s.cleanup.length > 1 ? 's' : ''} (${fmtSize(s.cleanupBytes)}): outdated versions or extensions that target no installed app. Removed items go to the Trash.</div><button class="act" data-do="review">Review &amp; clean up</button></div>`)
+      cards.push(`<div class="banner warn"><div class="grow"><strong>${plural(s.cleanup.length, 'safe cleanup suggestion')}</strong> (${fmtSize(s.cleanupBytes)}). Outdated versions, duplicates, or extensions that target no installed app. Removed items go to the Trash.</div><button class="btn sm" data-do="review">Review &amp; clean up</button></div>`)
     }
     const dbg = (this.debug || []).filter(d => d.on).map(d => d.version)
     const unsigned = this.extensions.filter(e => !e.signed && !e.adobeManaged && !e.error).length
     if (dbg.length) {
-      cards.push(`<div class="insight"><div class="grow">CEP debug mode is on for CSXS ${dbg.join(', ')}. Unsigned extensions load, and so could anything else dropped into the extensions folder. Turn it off if you don't need it${unsigned ? ` (${unsigned} installed extension${unsigned > 1 ? 's are' : ' is'} unsigned and would stop loading)` : ''}.</div><button class="act" data-do="debug-off">Turn off</button></div>`)
+      cards.push(`<div class="banner"><div class="grow"><strong>CEP debug mode is on</strong> (CSXS ${dbg.join(', ')}). Unsigned extensions load, and so could anything else dropped into the extensions folder${unsigned ? `. ${plural(unsigned, 'installed extension is', 'installed extensions are')} unsigned and would stop loading if you turn it off` : ''}.</div><button class="btn sm" data-do="debug-off">Turn off</button></div>`)
     } else if (unsigned) {
-      cards.push(`<div class="insight"><div class="grow">${unsigned} installed extension${unsigned > 1 ? 's are' : ' is'} unsigned and need CEP debug mode (CSXS 9–${MAX_CEP_RUNTIME}) to load. It is currently off.</div><button class="act" data-do="debug-on">Turn on</button></div>`)
+      cards.push(`<div class="banner"><div class="grow"><strong>${plural(unsigned, 'extension is', 'extensions are')} unsigned</strong> and need CEP debug mode (CSXS 9–${MAX_CEP_RUNTIME}) to load. It is currently off.</div><button class="btn sm" data-do="debug-on">Turn on</button></div>`)
     }
-    this.insights.innerHTML = cards.join('')
+    this.banners.innerHTML = cards.join('')
 
     const rows = this.visible()
-    if (!rows.length) {
-      this.list.innerHTML = '<div class="empty">No extensions match.</div>'
-      return
-    }
-    this.list.innerHTML = rows.map(e => this.row(e)).join('') + this.othersHtml()
+    const others = this.othersHtml()
+    this.list.innerHTML = rows.length || others ? rows.map(e => this.row(e)).join('') + others : '<div class="empty">No extensions match.</div>'
+  }
+
+  renderSidebar (s) {
+    const badge = document.querySelector('#nav-count')
+    badge.hidden = !s.withIssues
+    badge.textContent = s.withIssues
+    const seen = new Set()
+    const apps = this.apps.filter(a => !seen.has(a.name) && seen.add(a.name))
+    document.querySelector('#side-apps').innerHTML = apps.length
+      ? apps.map(a => `<li><span>${esc(a.name)}</span><span class="v">${esc(a.version ? String(a.version).split('.').slice(0, 2).join('.') : '')}</span></li>`).join('')
+      : '<li class="muted">No Adobe apps found</li>'
   }
 
   othersHtml () {
     const others = this.filter === 'all' ? (this.others || []).filter(o => !this.query || o.name.toLowerCase().includes(this.query)) : []
     if (!others.length) return ''
-    return '<div class="section-title">Other plugins seen by Adobe\'s installer (UXP and others)</div>' + others.map((o, i) => `<div class="ext" data-o="${i}">
+    return '<div class="section-title">Registered with Adobe\'s installer but no CEP folder found (UXP plugins, or leftovers that block reinstalls)</div>' + others.map((o, i) => `<div class="ext" data-o="${i}">
+      <div class="avatar" style="background:${avatarColor(o.name)}">${esc(o.name[0].toUpperCase())}</div>
       <div class="ext-main">
-        <div class="ext-name">${esc(o.name)}</div>
-        <div class="ext-meta"><span>v${esc(o.version)}</span><span class="badge">${esc(o.status.toLowerCase())}</span><span>${esc([...new Set(o.products)].join(', '))}</span></div>
+        <div class="ext-name">${esc(o.name)}<span class="v">v${esc(o.version)}</span></div>
+        <div class="ext-meta"><span class="badge">${esc(o.status.toLowerCase())}</span><span>${esc([...new Set(o.products)].join(', '))}</span></div>
       </div>
-      <div class="ext-actions"><button class="act danger" data-do="remove-other">Remove</button></div>
+      <div class="ext-actions"><button class="btn sm danger" data-do="remove-other">Remove</button></div>
     </div>`).join('')
   }
 
@@ -120,21 +147,21 @@ export class Manager {
     const idx = this.extensions.indexOf(e)
     const protectedExt = e.adobeManaged
     return `<div class="ext ${e.enabled ? '' : 'is-disabled'}" data-i="${idx}">
+      <div class="avatar" style="background:${avatarColor(e.name)}">${esc(e.name[0].toUpperCase())}</div>
       <div class="ext-main">
-        <div class="ext-name">${esc(e.name)}</div>
+        <div class="ext-name">${esc(e.name)}<span class="v">v${esc(e.version || '?')}</span></div>
         <div class="ext-meta">
-          <span>v${esc(e.version || '?')}</span>
-          <span class="badge scope">${e.scope}</span>
-          ${protectedExt ? '<span class="badge managed">managed by Creative Cloud</span>' : ''}
-          ${e.enabled ? '' : '<span class="badge">disabled</span>'}
           <span>${esc(hosts.join(', ') || 'no host info')}</span>
           <span>${fmtSize(e.size)}</span>
+          <span>${e.scope === 'system' ? 'All users' : 'This user'}</span>
+          ${protectedExt ? '<span class="badge managed">Creative Cloud</span>' : ''}
+          ${e.enabled ? '' : '<span class="badge">disabled</span>'}
         </div>
         ${e.issues.map(i => `<div class="issue ${i.level}">${esc(i.message)}</div>`).join('')}
       </div>
       <div class="ext-actions">
-        <button class="act" data-do="reveal">Reveal</button>
-        ${protectedExt ? '' : `<button class="act" data-do="${e.enabled ? 'disable' : 'enable'}">${e.enabled ? 'Disable' : 'Enable'}</button><button class="act danger" data-do="uninstall">Uninstall…</button>`}
+        <button class="btn sm" data-do="reveal">Reveal</button>
+        ${protectedExt ? '' : `<button class="btn sm" data-do="${e.enabled ? 'disable' : 'enable'}">${e.enabled ? 'Disable' : 'Enable'}</button><button class="btn sm danger" data-do="uninstall">Uninstall…</button>`}
       </div>
     </div>`
   }
@@ -210,7 +237,7 @@ export class Manager {
     const failures = []
     for (const e of cleanup) {
       try {
-        response === 0 ? await trashPath(e, shell) : await disableExtension(e)
+        response === 0 ? await trashPath(e.dir, shell) : await disableExtension(e)
       } catch (err) {
         failures.push(`${e.name}: ${err.message}`)
       }

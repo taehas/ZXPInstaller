@@ -11,7 +11,7 @@ module.exports = async function (params) {
   }
   console.log('afterSign hook triggered', params)
 
-  const appId = 'com.zxpinstaller'
+  const appId = 'com.taehas.zxpmanager'
 
   const appPath = path.join(params.appOutDir, params._pathOverride || `${params.packager.appInfo.productFilename}.app`)
   if (!fs.existsSync(appPath)) {

@@ -1,6 +1,6 @@
 {
-    "name": "ZXPInstaller",
-    "version": "1.8.2",
+    "name": "ZXPManager",
+    "version": "2.0.0",
     "dependencies": {
         "@electron/remote": "^2.1.3"
     }

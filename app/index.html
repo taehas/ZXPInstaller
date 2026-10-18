@@ -1,130 +1,113 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>ZXP Manager</title>
-        <script type="module" src="src/main.js"></script>
-        <link rel="stylesheet" type="text/css" href="style.css">
-        <link rel="stylesheet" type="text/css" href="manager.css">
-    </head>
-    <body>
-      <nav class="tabs">
-        <button class="tab is-active" data-tab="install">Install</button>
-        <button class="tab" data-tab="manage">Extensions</button>
-      </nav>
-      <section id="install-view">
-      <div class="main-view">
-        <div class="holder">
-          <div class="icon">
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self'">
+  <title>ZXP Manager</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="src/main.js"></script>
+</head>
+<body data-tab="install">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="logo.svg" alt="" class="brand-logo">
+      <div>
+        <div class="brand-name">ZXP Manager</div>
+        <div class="brand-sub">for Adobe extensions</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item is-active" data-tab="install">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14"/></svg>Install
+      </button>
+      <button class="nav-item" data-tab="manage">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Extensions
+        <span class="nav-count" id="nav-count" hidden></span>
+      </button>
+      <button class="nav-item" data-tab="about">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>About
+      </button>
+    </nav>
+    <div class="side-apps">
+      <div class="side-title">Detected apps</div>
+      <ul id="side-apps"><li class="muted">Scanning…</li></ul>
+    </div>
+  </aside>
 
-            <svg version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="74px" height="100px">
-            <g class="white">
-              <polygon class="backplate" fill="#B8B8B8" points="74,21.414 74,21.414 74,21.414 74,21.414 37,0 0,21.414 0,21.414 0,64.243 37,85.658 74,64.243 74,21.414"/>
-              <g class="three">
-                <path fill="#808080" d="M0,64.243l23.334-13.505L0,21.414V64.243z"/>
-                <path fill="#727373" d="M37,85.658l-13.666-34.92L0,64.243L37,85.658z"/>
-                <path fill="#808080" d="M37,42.829l-13.666,7.909L37,85.658V42.829z"/>
-                <path fill="#8E8E8E" d="M0,21.414l23.334,29.324L37,42.829L0,21.414z"/>
-              </g>
-              <g class="two">
-                <path fill="#A6A6A6" d="M74,64.243L50.666,50.738L74,21.414V64.243z"/>
-                <path fill="#A6A6A6" d="M37,42.829l13.666,7.909L37,85.658V42.829z"/>
-                <path fill="#939393" d="M74,21.414L50.666,50.738L37,42.829L74,21.414z"/>
-                <path fill="#B8B8B8" d="M37,85.658l13.666-34.92L74,64.243L37,85.658z"/>
-              </g>
-              <g class="one">
-                <path fill="#BBBBBB" d="M37,0v27.01l37-5.596L37,0z"/>
-                <path fill="#EAEAEA" d="M37,42.829V27.01L0,21.414L37,42.829z"/>
-                <path fill="#D3D3D3" d="M74,21.414L37,27.01v15.818L74,21.414z"/>
-                <path fill="#D3D3D3" d="M0,21.414l37,5.596V0L0,21.414z"/>
-              </g>
-            </g>
-            <g class="red">
-              <polygon class="backplate" fill="#C23344" points="74,21.414 74,21.414 74,21.414 74,21.414 37,0 0,21.414 0,21.414 0,64.243 37,85.658 74,64.243 74,21.414"/>
-              <g class="three">
-                <path fill="#80222D" d="M0,64.243l23.334-13.505L0,21.414V64.243z"/>
-                <path fill="#721E28" d="M37,85.658l-13.666-34.92L0,64.243L37,85.658z"/>
-                <path fill="#80222D" d="M37,42.829l-13.666,7.909L37,85.658V42.829z"/>
-                <path fill="#8F2632" d="M0,21.414l23.334,29.324L37,42.829L0,21.414z"/>
-              </g>
-              <g class="two">
-                <path fill="#9D2837" d="M74,64.243L50.666,50.738L74,21.414V64.243z"/>
-                <path fill="#9D2837" d="M37,42.829l13.666,7.909L37,85.658V42.829z"/>
-                <path fill="#8A2431" d="M74,21.414L50.666,50.738L37,42.829L74,21.414z"/>
-                <path fill="#AF2E3C" d="M37,85.658l13.666-34.92L74,64.243L37,85.658z"/>
-              </g>
-              <g class="one">
-                <path fill="#AC2B3B" d="M37,0v27.01l37-5.596L37,0z"/>
-                <path fill="#D6384A" d="M37,42.829V27.01L0,21.414L37,42.829z"/>
-                <path fill="#C23344" d="M74,21.414L37,27.01v15.818L74,21.414z"/>
-                <path fill="#C23344" d="M0,21.414l37,5.596V0L0,21.414z"/>
-              </g>
-              <polygon class="arrow" fill="#FFFFFF" points="41.7,-0.5 41.7,-13.1 32.3,-13.1 32.3,-0.5 23.3,-0.5 37,13.1 50.7,-0.5"/>
-            </g>
-            <g class="green">
-              <polygon class="backplate" fill="#4BBFA5" points="74,21.414 74,21.414 74,21.414 74,21.414 37,0 0,21.414 0,21.414 0,64.243 37,85.658 74,64.243 74,21.414"/>
-              <g class="three">
-                <polygon fill="#19806C" points="0,21.414 0,64.243 37,85.658 37,42.829"/>
-                <path fill="#177462" d="M0,64.243l23.334-13.505L0,21.414V64.243z"/>
-                <path fill="#166657" d="M37,85.658l-13.666-34.92L0,64.243L37,85.658z"/>
-                <path fill="#177462" d="M37,42.829l-13.666,7.909L37,85.658V42.829z"/>
-                <path fill="#19806C" d="M0,21.414l23.334,29.324L37,42.829L0,21.414z"/>
-              </g>
-              <g class="two">
-                <polygon fill="#22B196" points="37,42.829 37,85.658 74,64.243 74,21.414"/>
-                <path fill="#1EA087" d="M74,64.243L50.666,50.738L74,21.414V64.243z"/>
-                <path fill="#1EA087" d="M37,42.829l13.666,7.909L37,85.658V42.829z"/>
-                <path fill="#1E8E78" d="M74,21.414L50.666,50.738L37,42.829L74,21.414z"/>
-                <path fill="#22B196" d="M37,85.658l13.666-34.92L74,64.243L37,85.658z"/>
-              </g>
-              <g class="one">
-                <polygon fill="#4BBFA5" points="37,0 0,21.414 37,42.829 74,21.414"/>
-                <path fill="#25B799" d="M37,0v27.01l37-5.596L37,0z"/>
-                <path fill="#64C4B0" d="M37,42.829V27.01L0,21.414L37,42.829z"/>
-                <path fill="#4BBFA5" d="M74,21.414L37,27.01v15.818L74,21.414z"/>
-                <path fill="#4BBFA5" d="M0,21.414l37,5.596V0L0,21.414z"/>
-              </g>
-            </g>
-            </svg>
+  <main class="content">
+    <section id="view-install" class="view">
+      <header class="view-head">
+        <div>
+          <h1>Install</h1>
+          <p>Add <code>.zxp</code> and <code>.ccx</code> extensions to your Adobe apps.</p>
+        </div>
+      </header>
+      <div class="dropzone" id="dropzone" data-state="idle" tabindex="0" role="button">
+        <div class="dz-icon">
+          <svg viewBox="0 0 24 24" class="i-idle"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14"/></svg>
+          <svg viewBox="0 0 24 24" class="i-ok"><path d="M5 13l4 4L19 7"/></svg>
+          <svg viewBox="0 0 24 24" class="i-err"><path d="M12 8v5m0 3h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+          <span class="spinner"></span>
+        </div>
+        <div class="dz-title" id="dz-title">Drop extensions here</div>
+        <div class="dz-sub" id="dz-sub">or click to choose files. You can drop several at once.</div>
+      </div>
+      <h2 class="section-h" id="log-h" hidden>This session</h2>
+      <ul id="install-log"></ul>
+    </section>
 
-          </div>
-          <div class="status"></div>
+    <section id="view-manage" class="view" hidden>
+      <header class="view-head">
+        <div>
+          <h1>Extensions</h1>
+          <p>Everything installed for your Adobe apps, with problems called out.</p>
+        </div>
+        <button class="btn" id="rescan">Rescan</button>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="banners" id="banners"></div>
+      <div class="toolbar">
+        <input type="search" class="search" id="search" placeholder="Search extensions">
+        <div class="seg" id="filters">
+          <button class="is-active" data-filter="all">All</button>
+          <button data-filter="issues">Needs attention</button>
+          <button data-filter="disabled">Disabled</button>
         </div>
       </div>
-      <ul id="install-log"></ul>
-      </section>
-      <section id="manage-view" hidden>
-        <div class="insights"></div>
-        <div class="toolbar">
-          <input type="search" class="search" placeholder="Filter extensions">
-          <div class="filters">
-            <button class="chip is-active" data-filter="all">All</button>
-            <button class="chip" data-filter="issues">Needs attention</button>
-            <button class="chip" data-filter="disabled">Disabled</button>
-          </div>
-          <button class="chip rescan">Rescan</button>
+      <div class="ext-list" id="ext-list"></div>
+    </section>
+
+    <section id="view-about" class="view" hidden>
+      <header class="view-head"><div><h1>About</h1></div></header>
+      <div class="about">
+        <img src="logo.svg" alt="" class="about-logo">
+        <h2>ZXP Manager <span class="ver" id="ver"></span></h2>
+        <p class="lead">A modern fork of <a target="_blank" href="https://github.com/elements-storage/ZXPInstaller">ZXPInstaller</a> that installs, audits and cleanly removes Adobe CEP and UXP extensions.</p>
+        <div class="callout">
+          <strong>Heads up: this fork is vibe-coded.</strong>
+          It was built quickly with an AI coding assistant and is tested by use, not by a full test suite. It never hard-deletes (removals go to the Trash), but read the confirmation dialogs and keep backups of anything you can't replace.
         </div>
-        <div class="ext-list"></div>
-      </section>
-      <div id="drop-overlay">Drop .zxp or .ccx files to install</div>
-      <dialog id="uninstall-dialog">
-        <h3 class="ud-title"></h3>
-        <p class="ud-sub">Everything below is matched by this extension's bundle and panel ids. Untick anything you want to keep. Items go to the Trash.</p>
-        <div class="ud-list"></div>
-        <div class="ud-actions">
-          <span class="ud-total"></span>
-          <button class="act ud-cancel">Cancel</button>
-          <button class="act danger ud-go">Move to Trash</button>
-        </div>
-      </dialog>
-      <footer>
-        <div>Maintained with ❤️ at</div>
-        <a href="https://elements.tv" target="_blank">
-          <img src="logo.svg" />
-        </a>
-        <div>
-          Originally created by <a target="_blank" href="https://github.com/maxoos">@maxoos</a> and maintained by <a target="_blank" href="https://github.com/cameronmcefee">@cameronmcefee</a>.
-        </div>
-      </footer>
-    </body>
+        <p>Original ZXPInstaller by <a target="_blank" href="https://github.com/maxoos">@maxoos</a>, maintained by <a target="_blank" href="https://github.com/cameronmcefee">@cameronmcefee</a> and ELEMENTS Media Storage. This fork keeps the same GPL-2.0 license.</p>
+        <p class="links">
+          <a target="_blank" href="https://github.com/taehas/ZXPInstaller">This fork on GitHub</a>
+          <a target="_blank" href="https://github.com/taehas/ZXPInstaller/issues">Report a problem</a>
+          <a target="_blank" href="https://github.com/elements-storage/ZXPInstaller">Original project</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <div id="drop-overlay"><div>Drop <b>.zxp</b> or <b>.ccx</b> files to install</div></div>
+
+  <dialog id="uninstall-dialog">
+    <h3 class="ud-title"></h3>
+    <p class="ud-sub">Everything below is matched by this extension's bundle and panel ids. Untick anything you want to keep. Items go to the Trash.</p>
+    <div class="ud-list"></div>
+    <div class="ud-actions">
+      <span class="ud-total"></span>
+      <button class="btn ud-cancel">Cancel</button>
+      <button class="btn danger ud-go">Move to Trash</button>
+    </div>
+  </dialog>
+</body>
 </html>

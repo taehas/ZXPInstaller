@@ -1,9 +1,8 @@
 {
-  "name": "zxpinstaller",
-  "version": "1.8.2",
-  "description": "An open source Creative Cloud extension installer",
+  "name": "zxp-manager",
+  "version": "2.0.0",
+  "description": "Install and manage Adobe CEP/UXP extensions: a modern, vibe-coded fork of ZXPInstaller",
   "main": "index.js",
-  "priave": true,
   "dependencies": {
     "electron": "^44.7.2",
     "electron-builder": "^26.15.3",
@@ -24,14 +23,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/elements-storage/ZXPInstaller.git"
+    "url": "git+https://github.com/taehas/ZXPInstaller.git"
   },
-  "author": "ELEMENTS Media Storage",
+  "author": "taehas (fork); original by ELEMENTS Media Storage",
   "license": "GPL-2.0",
   "bugs": {
-    "url": "https://github.com/elements-storage/ZXPInstaller/issues"
+    "url": "https://github.com/taehas/ZXPInstaller/issues"
   },
-  "homepage": "https://github.com/elements-storage/ZXPInstaller#readme",
+  "homepage": "https://github.com/taehas/ZXPInstaller#readme",
   "devDependencies": {
     "eslint": "^8.57.1",
     "eslint-config-standard": "^16.0.3",
@@ -39,5 +38,6 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.1"
   },
-  "type": "module"
+  "type": "module",
+  "productName": "ZXP Manager"
 }

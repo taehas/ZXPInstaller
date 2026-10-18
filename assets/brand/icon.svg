@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b7bff"/>
+      <stop offset="1" stop-color="#3b2fd1"/>
+    </linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d9d6ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  <!-- package: isometric cube -->
+  <g transform="translate(512 548)">
+    <path d="M0 -250 L217 -125 L0 0 L-217 -125 Z" fill="url(#top)"/>
+    <path d="M-217 -125 L0 0 L0 250 L-217 125 Z" fill="#ffffff" fill-opacity=".72"/>
+    <path d="M217 -125 L0 0 L0 250 L217 125 Z" fill="#ffffff" fill-opacity=".48"/>
+  </g>
+  <!-- arrow dropping into the package -->
+  <path d="M512 150 V400 M512 400 L432 320 M512 400 L592 320" stroke="#3b2fd1" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
