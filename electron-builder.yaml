@@ -13,15 +13,21 @@ fileAssociations:
 dmg:
   icon: assets/mac/icon.icns
 
+directories:
+  output: dist
+
 mac:
   icon: assets/mac/icon.icns
   category: public.app-category.graphics-design
+  identity: "-"
+  target: [dmg, zip]
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
 
 win:
   icon: assets/brand/icon.png
+  target: [nsis, zip]
+  artifactName: ${productName}-${version}-win-${arch}.${ext}
 
 nsis:
   packElevateHelper: false
 
-afterSign: ./hooks/afterSignHook.cjs
-afterAllArtifactBuild: ./hooks/afterBuildHook.cjs

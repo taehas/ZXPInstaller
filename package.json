@@ -17,9 +17,9 @@
     "clean:win": "rm -rf ./release/win",
     "postinstall": "cd app && yarn",
     "pack": "npm run pack:mac-arm64 && npm run pack:win",
-    "pack:mac-arm64": "node hooks/ci-env-wrapper.cjs ./node_modules/.bin/electron-builder --macos --arm64",
-    "pack:mac-x64": "node hooks/ci-env-wrapper.cjs ./node_modules/.bin/electron-builder --macos --x64",
-    "pack:win": "node hooks/ci-env-wrapper.cjs cmd /c node_modules\\.bin\\electron-builder --win --x64"
+    "pack:mac-arm64": "node hooks/ci-env-wrapper.cjs ./node_modules/.bin/electron-builder --macos --arm64 --publish never",
+    "pack:mac-x64": "node hooks/ci-env-wrapper.cjs ./node_modules/.bin/electron-builder --macos --x64 --publish never",
+    "pack:win": "node hooks/ci-env-wrapper.cjs cmd /c node_modules\\.bin\\electron-builder --win --x64 --publish never"
   },
   "repository": {
     "type": "git",
