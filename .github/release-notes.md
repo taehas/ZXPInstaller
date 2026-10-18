@@ -14,8 +14,8 @@ Install, audit and cleanly uninstall Adobe CEP/UXP extensions. A modernised, **v
 
 | Platform | File |
 | --- | --- |
-| macOS, Apple Silicon | `ZXP Manager-*-mac-arm64.dmg` (or `.zip`) |
-| macOS, Intel | `ZXP Manager-*-mac-x64.dmg` (or `.zip`) |
-| Windows | `ZXP Manager-*-win-x64.exe` installer (or `.zip`) |
+| macOS, Apple Silicon | `ZXP.Manager-*-mac-arm64.dmg` (or `.zip`) |
+| macOS, Intel | `ZXP.Manager-*-mac-x64.dmg` (or `.zip`) |
+| Windows | `ZXP.Manager-*-win-x64.exe` installer (or `.zip`) |
 
 Verify downloads against `SHA256SUMS.txt`.
