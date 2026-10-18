@@ -20,6 +20,8 @@ mac:
   icon: assets/mac/icon.icns
   category: public.app-category.graphics-design
   identity: "-"
+  hardenedRuntime: false
+  gatekeeperAssess: false
   target: [dmg, zip]
   artifactName: ${productName}-${version}-mac-${arch}.${ext}
 
