@@ -27,10 +27,13 @@ jobs:
         include:
           - os: macos-latest
             script: pack:mac-arm64
+            name: mac-arm64
           - os: macos-latest
             script: pack:mac-x64
+            name: mac-x64
           - os: windows-latest
             script: pack:win
+            name: win-x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +48,7 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.script }}
+          name: ${{ matrix.name }}
           path: |
             dist/*.dmg
             dist/*.zip
