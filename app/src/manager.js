@@ -1,6 +1,7 @@
 import { scanExtensions, detectApps, analyze, summarize, debugModeState, setDebugMode, normalizeName, HOST_NAMES, MAX_CEP_RUNTIME } from './scanner.js'
 import { listUpia, removeUpia } from './upia.js'
-import { disableExtension, enableExtension, removeExtension } from './actions.js'
+import { disableExtension, enableExtension, trashPath } from './actions.js'
+import { findLeftovers } from './leftovers.js'
 const { dialog, shell } = require('@electron/remote')
 
 const fmtSize = b => (b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB')
@@ -132,7 +133,7 @@ export class Manager {
       </div>
       <div class="ext-actions">
         <button class="act" data-do="reveal">Reveal</button>
-        ${protectedExt ? '' : `<button class="act" data-do="${e.enabled ? 'disable' : 'enable'}">${e.enabled ? 'Disable' : 'Enable'}</button><button class="act danger" data-do="remove">Remove</button>`}
+        ${protectedExt ? '' : `<button class="act" data-do="${e.enabled ? 'disable' : 'enable'}">${e.enabled ? 'Disable' : 'Enable'}</button><button class="act danger" data-do="uninstall">Uninstall…</button>`}
       </div>
     </div>`
   }
@@ -145,10 +146,9 @@ export class Manager {
     const ext = this.extensions[parseInt(btn.closest('.ext').dataset.i, 10)]
     try {
       if (act === 'reveal') return shell.showItemInFolder(ext.dir)
-      if (act === 'remove' && !(await this.confirm(`Move “${ext.name}” ${ext.version || ''} to the Trash?`, ext.dir))) return
+      if (act === 'uninstall') return this.deepUninstall(ext)
       if (act === 'disable') await disableExtension(ext)
       if (act === 'enable') await enableExtension(ext)
-      if (act === 'remove') await removeExtension(ext, shell)
       this.refresh()
     } catch (err) {
       dialog.showErrorBox('Action failed', err.message)
@@ -209,13 +209,45 @@ export class Manager {
     const failures = []
     for (const e of cleanup) {
       try {
-        response === 0 ? await removeExtension(e, shell) : await disableExtension(e)
+        response === 0 ? await trashPath(e, shell) : await disableExtension(e)
       } catch (err) {
         failures.push(`${e.name}: ${err.message}`)
       }
     }
     if (failures.length) dialog.showErrorBox('Some items failed', failures.join('\n'))
     this.refresh()
+  }
+
+  deepUninstall (ext) {
+    const dlg = document.querySelector('#uninstall-dialog')
+    const items = findLeftovers(ext, this.extensions)
+    const list = dlg.querySelector('.ud-list')
+    const total = dlg.querySelector('.ud-total')
+    dlg.querySelector('.ud-title').textContent = `Uninstall ${ext.name} ${ext.version || ''}`
+    list.innerHTML = items.map((it, i) => `<label class="ud-row"><input type="checkbox" data-i="${i}" ${it.checked ? 'checked' : ''}><span class="grow"><span class="kind">${esc(it.kind)}${it.scope === 'system' ? ' · system (asks for admin password)' : ''}</span><br>${esc(it.path)}</span><span class="sz">${fmtSize(it.size)}</span></label>`).join('')
+    const update = () => {
+      const picked = items.filter(i => i.checked)
+      total.textContent = `${picked.length} of ${items.length} selected · ${fmtSize(picked.reduce((s, i) => s + i.size, 0))}`
+    }
+    list.onchange = e => {
+      items[e.target.dataset.i].checked = e.target.checked; update()
+    }
+    update()
+    dlg.querySelector('.ud-cancel').onclick = () => dlg.close()
+    dlg.querySelector('.ud-go').onclick = async () => {
+      const failures = []
+      for (const it of items.filter(i => i.checked)) {
+        try {
+          await trashPath(it.path, shell)
+        } catch (err) {
+          failures.push(`${it.path}: ${err.message}`)
+        }
+      }
+      dlg.close()
+      if (failures.length) dialog.showErrorBox('Some items could not be removed', failures.join('\n'))
+      this.refresh()
+    }
+    dlg.showModal()
   }
 
   async confirm (message, detail) {

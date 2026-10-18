@@ -77,3 +77,25 @@ body.manage footer { display: none; }
 .act.danger:hover { background: #c23344; color: #fff; }
 .empty { padding: 30px; text-align: center; color: #b99; }
 .section-title { padding: 10px 12px 6px; color: #b99; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-top: 1px solid #751f29; background: #3a1016; }
+
+#uninstall-dialog { background: #2f0d12; color: #f2e6e8; border: 1px solid #c23344; border-radius: 8px; width: min(680px, 92vw); padding: 18px; font-size: 12px; -webkit-app-region: no-drag; }
+#uninstall-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.ud-title { margin: 0 0 6px; color: #fff; font-size: 15px; }
+.ud-sub { margin: 0 0 10px; color: #b99; }
+.ud-list { max-height: 300px; overflow-y: auto; border: 1px solid #751f29; border-radius: 5px; }
+.ud-row { display: flex; gap: 8px; padding: 6px 10px; border-bottom: 1px solid #471319; align-items: flex-start; }
+.ud-row:last-child { border-bottom: 0; }
+.ud-row .grow { flex: 1; min-width: 0; word-break: break-all; }
+.ud-row .kind { color: #9bb7d4; font-size: 10px; }
+.ud-row .sz { color: #b99; flex: none; }
+.ud-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.ud-total { flex: 1; color: #b99; }
+#install-log { list-style: none; margin: 0 auto 14px; padding: 0; width: min(460px, calc(100% - 80px)); max-height: 150px; overflow-y: auto; font-size: 12px; color: #f2e6e8; user-select: text; }
+#install-log li { padding: 4px 8px; border-bottom: 1px solid #471319; display: flex; gap: 8px; }
+#install-log .ok { color: #7fd6b3; }
+#install-log .fail { color: #ff7b86; }
+#install-log .wait { color: #b99; }
+#install-log .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#drop-overlay { display: none; position: fixed; inset: 10px; z-index: 50; border: 2px dashed #ff9aa5; border-radius: 10px; background: rgba(71, 19, 25, .88); color: #fff; font-size: 18px; font-weight: bold; align-items: center; justify-content: center; pointer-events: none; }
+body.drop-active.manage #drop-overlay { display: flex; }

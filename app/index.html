@@ -91,6 +91,7 @@
           <div class="status"></div>
         </div>
       </div>
+      <ul id="install-log"></ul>
       </section>
       <section id="manage-view" hidden>
         <div class="insights"></div>
@@ -105,6 +106,17 @@
         </div>
         <div class="ext-list"></div>
       </section>
+      <div id="drop-overlay">Drop .zxp or .ccx files to install</div>
+      <dialog id="uninstall-dialog">
+        <h3 class="ud-title"></h3>
+        <p class="ud-sub">Everything below is matched by this extension's bundle and panel ids. Untick anything you want to keep. Items go to the Trash.</p>
+        <div class="ud-list"></div>
+        <div class="ud-actions">
+          <span class="ud-total"></span>
+          <button class="act ud-cancel">Cancel</button>
+          <button class="act danger ud-go">Move to Trash</button>
+        </div>
+      </dialog>
       <footer>
         <div>Maintained with ❤️ at</div>
         <a href="https://elements.tv" target="_blank">

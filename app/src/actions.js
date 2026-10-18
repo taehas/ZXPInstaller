@@ -56,11 +56,14 @@ export async function enableExtension (ext) {
   await move(ext.dir, dest)
 }
 
-export async function removeExtension (ext, shell) {
-  if (canWrite(path.dirname(ext.dir))) {
-    await shell.trashItem(ext.dir)
+// Move any path to the Trash (reversible). Admin prompt only when it isn't writable.
+export async function trashPath (p, shell) {
+  if (canWrite(path.dirname(p))) {
+    await shell.trashItem(p)
   } else {
-    const trash = path.join(os.homedir(), '.Trash', `${ext.folder} ${Date.now()}`)
-    await move(ext.dir, trash)
+    const trash = path.join(os.homedir(), '.Trash', `${path.basename(p)} ${Date.now()}`)
+    await move(p, trash)
   }
 }
+
+export const removeExtension = (ext, shell) => trashPath(ext.dir, shell)

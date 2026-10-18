@@ -37,7 +37,7 @@ export function diagnoseArchive (file) {
   if (names.some(n => /(^|\/)CSXS\/manifest\.xml$/i.test(n)) === false && names.some(n => /(^|\/)[^/]+\/CSXS\/manifest\.xml$/i.test(n))) {
     return 'The extension is nested inside an extra folder. The CSXS folder must be at the top level of the archive; re-zip it from inside that folder.'
   }
-  return `No CSXS/manifest.xml found. Top-level contents: ${[...new Set(names.map(n => n.split('/')[0]))].slice(0, 5).join(', ')}.`
+  return `Top-level contents: ${[...new Set(names.map(n => n.split('/')[0]))].slice(0, 5).join(', ')}.`
 }
 
 export class Installer {
@@ -66,7 +66,7 @@ export class Installer {
         const line = output.split('\n').map(l => l.trim()).filter(Boolean).pop()
         const known = status ? getErrorMessage(parseInt(status)) : null
         if (known) return reject(new Error(status === '410' ? `${known} ${diagnoseArchive(extPath)}` : known))
-        if (status) return reject(new Error(`Adobe's installer failed with error ${status}. ${line}`))
+        if (status) return reject(new Error(`Adobe's installer failed (${line.replace(/!$/, '')})`))
         const fallback = `Installer exited with code ${code}`
         reject(new Error(line ?? fallback))
       })

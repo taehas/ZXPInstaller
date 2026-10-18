@@ -170,7 +170,9 @@ function parseManifest (xmlText) {
     name: h.getAttribute('Name'),
     ...parseHostRange(h.getAttribute('Version')),
   }))
+  const panelIds = [...doc.querySelectorAll('ExtensionList > Extension')].map(x => x.getAttribute('Id')).filter(Boolean)
   return {
+    panelIds,
     bundleId: root.getAttribute('ExtensionBundleId'),
     bundleVersion: root.getAttribute('ExtensionBundleVersion'),
     bundleName: root.getAttribute('ExtensionBundleName'),
@@ -193,6 +195,7 @@ export function readExtension (dir, scope, enabled) {
     version: versionFromFolder(folder),
     hosts: [],
     runtimes: [],
+    panelIds: [],
     signed: false,
     adobeManaged: false,
     error: null,
@@ -209,6 +212,7 @@ export function readExtension (dir, scope, enabled) {
     ext.version = m.bundleVersion || ext.version
     ext.hosts = m.hosts
     ext.runtimes = m.runtimes
+    ext.panelIds = m.panelIds
   } catch (e) {
     ext.error = e.code === 'ENOENT' ? 'Missing CSXS/manifest.xml' : e.message
   }

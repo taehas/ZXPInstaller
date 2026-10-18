@@ -43,3 +43,7 @@ The **Extensions** tab scans your user and system CEP extension folders and Adob
 Extensions can be disabled/enabled (moved to a sibling `extensions.disabled` folder, fully reversible), revealed, or removed. Adobe-managed extensions are protected. System-level changes prompt for an admin password on macOS.
 
 Installs prefer Adobe's Unified Plugin Installer Agent (installed with Creative Cloud, handles `.zxp` and `.ccx`) and fall back to the bundled ExManCmd. Plugins that only Adobe's installer knows about (mostly UXP) are listed in a separate section and can be removed through it. A button toggles CEP debug mode.
+
+**Deep uninstall:** *Uninstall…* lists every copy of the extension plus its CEP panel caches, logs, preferences and app data, matched strictly by bundle/panel id. Untick anything to keep; all of it goes to the Trash.
+
+**Drag and drop:** drop one or many `.zxp`/`.ccx` files anywhere in the window (any tab), on the Dock icon, or open them with the app; they install in sequence with a per-file result.

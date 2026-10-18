@@ -1,5 +1,13 @@
 asar: false
 
+fileAssociations:
+  - ext: zxp
+    name: Adobe ZXP Extension
+    role: Editor
+  - ext: ccx
+    name: Adobe CCX Plugin
+    role: Editor
+
 dmg:
   background: assets/mac/installer.png
   icon: assets/mac/icon.icns
